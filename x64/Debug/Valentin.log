@@ -1,2 +1,3 @@
 ﻿  Valentin.cpp
-  Valentin.vcxproj -> D:\Projects\C++\Valentin\x64\Debug\Valentin.exe
+D:\Рабочий стол\Minesweeper\Valentin.cpp(315,12): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+  Valentin.vcxproj -> D:\Рабочий стол\Minesweeper\x64\Debug\Valentin.exe

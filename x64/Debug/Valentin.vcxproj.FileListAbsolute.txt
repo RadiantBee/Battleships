@@ -1,1 +1,2 @@
 D:\Projects\C++\Valentin\x64\Debug\Valentin.exe
+D:\Рабочий стол\Minesweeper\x64\Debug\Valentin.exe
