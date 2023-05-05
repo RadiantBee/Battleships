@@ -73,6 +73,34 @@ public:
 			cout << "\n";
 		}
 	}
+	void printHit() // print only hits or misses
+	{
+		cout << "\n  ";
+		for (int x = 0; x < _size; x++)
+			cout << x << " ";
+		cout << "\n";
+		for (int y = 0; y < _size; y++)
+		{
+			cout << y << " ";
+			for (int x = 0; x < _size; x++)
+			{
+				switch (_matrix[x][y])
+				{
+				case 2: // hit
+					cout << "x";
+					break;
+				case 3: // miss
+					cout << "o";
+					break;
+				default:  // nothing here (-1 - aroud a ship)
+					cout << "_";
+					break;
+				}
+				cout << " ";
+			}
+			cout << "\n";
+		}
+	}
 	void operator()(int size) //!only for initialisation in default constructor of other classes
 	{
 		_size = size;
@@ -176,7 +204,8 @@ public:
 		int deck = 4;
 		int ship = 1;
 		bool isRotated;
-		int x, y;
+		int x = 0; 
+		int y = 0;
 		bool free;
 
 		for (int k = deck; k > 0; k--)
@@ -187,11 +216,21 @@ public:
 				system("cls");
 				print();
 
-				cout << "Enter size " << deck << " ship x: "; cin >> x;
-				cout << "Enter size " << deck << " ship y: "; cin >> y;
-				if (deck != 1)
+
+				while (true)
 				{
-					cout << "Press 0 for horisontal rotation, 1 for vertical rotaion: "; cin >> isRotated;
+					cout << "Enter size " << deck << " ship x: "; cin >> x;
+					cout << "Enter size " << deck << " ship y: "; cin >> y;
+					if (deck != 1)
+					{
+						cout << "Press 0 for horisontal rotation, 1 for vertical rotaion: "; cin >> isRotated;
+					}
+					if (x > -1 && x < _size && y > -1 && y < _size)
+						break;
+					else
+					{
+						cout << "Place isn't free!\n";
+					}
 				}
 				
 				if (isRotated) //for one rotation
@@ -199,9 +238,9 @@ public:
 					do //searching for a free space
 					{
 						free = 0;
-						for (int i = y; i <= y + deck; i++)
+						for (int i = y; i <= y + deck - 1; i++)
 						{
-							if (_matrix[x][i] != 0)
+							if (i > 9 || _matrix[x][i] != 0)
 							{
 								free = 1;
 								cout << "Place isn't free!\n";
@@ -215,7 +254,7 @@ public:
 					// -1 (where other ships cannot go)
 					for (int i = x - 1; i <= x + 1; i++)
 					{
-						for (int j = y - 1; j <= y + deck; j++)
+						for (int j = y - 1; j <= y + deck - 1; j++)
 						{
 							if (i >= 0 && i < _size && j >= 0 && j < _size)
 								_matrix[i][j] = -1;
@@ -230,9 +269,9 @@ public:
 					do //searching for a free space
 					{
 						free = 0;
-						for (int i = x; i <= x + deck; i++)
+						for (int i = x; i <= x + deck - 1; i++)
 						{
-							if (_matrix[i][y] != 0)
+							if (i > 9 || _matrix[i][y] != 0)
 							{
 								free = 1;
 								cout << "Place isn't free!\n";
@@ -264,56 +303,160 @@ public:
 		system("cls");
 		
 	}
+	void hit(int x, int y)
+	{
+		if (_matrix[x][y] == 1)
+		{
+			_matrix[x][y] = 2;
+		}
+		else
+		{
+			_matrix[x][y] = 3;
+		}
+	}
 };
 
 class Player
 {
 private:
-	Field shipField;
-	Field hitField;
+	Field _shipField;// field with player ships
+	Field _hitField; // field with enemy ships
+	int _playerShipsLeft;	
+	int _enemyShipsLeft;
+	int _direction; // for AI to remember a direction
+	int _x; // for AI to remember x of the last hit
+	int _y; // for AI to remember y of the last hit
+	bool _didHit; // for AI to remember an hit
 public:
 	Player(int size)
 	{
-		shipField(size);
-		hitField(size);
+		_shipField(size);
+		_shipField.autoFill();//_shipField.fill(); !!!changed for testing purposes
+		_hitField(size);
+		_hitField.autoFill();
+		_playerShipsLeft = 20;
+		_enemyShipsLeft = 20;
+		//For algorithm
+		_direction = 0;
+		_didHit = 0;
+		_x = 0;
+		_y = 0;
 	}
+	bool playerShipsLeft()
+	{
+		return _playerShipsLeft;
+	}
+	bool enemyShipsLeft()
+	{
+		return _enemyShipsLeft;
+	}
+	void playerTurn()
+	{
+		int x; int y;
+		bool repeat = true;
+		while (repeat)
+		{
+			repeat = false;
 
+			system("cls");
+			cout << "Your ships: ";
+			_shipField.print();
+			cout << "Your hits: ";
+			_hitField.printHit();
+
+			cout << "Hit x: "; cin >> x;
+			cout << "Hit y: "; cin >> y;
+			_hitField.hit(x, y);
+			if (_hitField(x,y) == 1)
+			{
+				repeat = true;
+				_enemyShipsLeft--;
+				cout << "Hit! Enter something to continue...";
+				cin;
+			}
+			else
+			{
+				cout << "Miss! Enter something to continue...";
+				cin;
+			}
+		}
+
+	}
+	void aiTurn(int size)
+	{
+		if (!_didHit)
+		{
+			_x = rand() % size;
+			_y = rand() % size;
+		}
+		
+		bool repeat = true;
+		while (repeat)
+		{
+			repeat = false;
+
+			if (_shipField(_x, _y) == 1)
+			{
+				repeat = true;
+				_shipField.hit(_x, _y);
+				_playerShipsLeft--;
+			}
+		}
+	}
 };
 
 class Game
 {
 private:
-	bool _status;
 	bool _playerWin;
-	Field _aiShips;
+	bool _again;
 public:
 	Game()
 	{
-		_status = true;
 		_playerWin = false;
-
+		_again = false;
 	}
-	bool isGoing()
+	void play(int size = 10)
 	{
-		return _status;
+		srand(time(0));
+		while (_again)
+		{
+			Player player(size);
+			while (true)
+			{
+				player.playerTurn();
+				if (!player.enemyShipsLeft())
+				{
+					_playerWin = true;
+					break;
+				}
+				player.aiTurn(size);
+				if (!player.playerShipsLeft())
+					break;
+			}
+			system("cls");
+			switch (_playerWin)
+			{
+			case false:
+				cout << "You lost!\n";
+				break;
+			case true:
+				cout << "Congratulations! You won!\n";
+				break;
+			default:
+				cout << "Something went wrong!\n";
+				break;
+			}
+			cout << "Press 0 to end game or 1 to continue:"; cin >> _again;
+		}
+		
 	}
+
 };
 
 int main()
 {
-	/*
-	//Before start
-	int sizeOfFields = 10;
 	Game game;
-	Player player(sizeOfFields);
-	//Game started
-	while (game.isGoing())
-	{
-
-	}
-	*/
-	srand(time(0));
-	Field test(10);
-	test.fill();
+	game.play();
 }
 

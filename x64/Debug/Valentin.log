@@ -1,3 +1,4 @@
 ﻿  Valentin.cpp
-D:\Рабочий стол\Minesweeper\Valentin.cpp(315,12): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+D:\Рабочий стол\Minesweeper\Valentin.cpp(422,13): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+D:\Рабочий стол\Minesweeper\Valentin.cpp(448,1): warning C4809: в операторе switch имеется ненужная метка "default"; все возможные метки "case" уже заданы
   Valentin.vcxproj -> D:\Рабочий стол\Minesweeper\x64\Debug\Valentin.exe
