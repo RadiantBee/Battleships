@@ -323,10 +323,13 @@ private:
 	Field _hitField; // field with enemy ships
 	int _playerShipsLeft;	
 	int _enemyShipsLeft;
-	int _direction; // for AI to remember a direction
+	unsigned int _direction; // for AI to remember a direction
 	int _x; // for AI to remember x of the last hit
 	int _y; // for AI to remember y of the last hit
-	bool _didHit; // for AI to remember an hit
+	int _hits; // for AI to remember hits
+	int _firstHitX;
+	int _firstHitY;
+	bool _directionWasChanged;
 public:
 	Player(int size)
 	{
@@ -338,9 +341,12 @@ public:
 		_enemyShipsLeft = 20;
 		//For algorithm
 		_direction = 0;
-		_didHit = 0;
+		_hits = 0;
 		_x = 0;
 		_y = 0;
+		_firstHitX = 0;
+		_firstHitY = 0;
+		_directionWasChanged = false;
 	}
 	bool playerShipsLeft()
 	{
@@ -367,39 +373,108 @@ public:
 			cout << "Hit x: "; cin >> x;
 			cout << "Hit y: "; cin >> y;
 			_hitField.hit(x, y);
-			if (_hitField(x,y) == 1)
+			if (_hitField(x,y) == 2)
 			{
 				repeat = true;
 				_enemyShipsLeft--;
-				cout << "Hit! Enter something to continue...";
-				cin;
-			}
-			else
-			{
-				cout << "Miss! Enter something to continue...";
-				cin;
 			}
 		}
 
 	}
 	void aiTurn(int size)
 	{
-		if (!_didHit)
+		_x = rand() % size;
+		_y = rand() % size;
+		while (true)
 		{
-			_x = rand() % size;
-			_y = rand() % size;
-		}
-		
-		bool repeat = true;
-		while (repeat)
-		{
-			repeat = false;
-
-			if (_shipField(_x, _y) == 1)
+			if(!_hits)
+			{ 
+				if (_shipField(_x, _y) == 2 || _shipField(_x, _y) == 3) // 2 = hit, 3 = miss
+				{
+					_x = rand() % size;
+					_y = rand() % size;
+				}
+				if (_shipField(_x, _y) != 1) // if miss
+				{
+					_shipField.hit(_x, _y);
+					break;
+				}
+				if (_shipField(_x, _y) == 1) // if first hit of a ship
+				{
+					_shipField.hit(_x, _y);
+					_firstHitX = _x;
+					_firstHitY = _y;
+					_hits++;
+					_playerShipsLeft--;
+				}
+			}
+			
+			if (_hits)
 			{
-				repeat = true;
-				_shipField.hit(_x, _y);
-				_playerShipsLeft--;
+				int tempX, tempY;
+				while (_x + _direction - 2 == size || _y + _direction - 1 == size) // if direction lead in a bad spot
+				{
+					_direction++; // change direction
+				}
+				// there are 4 directions: ↑ = 0; → = 1; ↓ = 2; ← = 3
+				if (_direction > 3)
+				{
+					_hits = 0;
+					_direction = 0;
+					continue;
+				}
+
+				
+				if (_direction % 2)
+				{
+					tempX = _x + _direction - 2;
+					tempY = _y;
+				}
+				else
+				{
+					tempX = _x;
+					tempY = _y + _direction - 1;
+				}
+				
+				if (_shipField(tempX, tempY) != 1) // if miss
+				{
+					_shipField.hit(tempX, tempY);
+					if (_hits > 2) // if we already know rotation of the ship
+					{
+						if(!_directionWasChanged)
+						{
+							if (_direction > 1)
+								_direction -= 2;
+							else
+								_direction += 2;
+							_x = _firstHitX;
+							_y = _firstHitY;
+							_directionWasChanged = true;
+						}
+						else
+						{
+							_directionWasChanged = false;
+							_hits = 0;
+							_direction = 0;
+						}
+					}
+					else
+					{
+						_direction++;
+					}
+					break;
+				}
+				if (_shipField(tempX, tempY) == 1) // if hit a ship
+				{
+					_shipField.hit(tempX, tempY);
+					_x = tempX;
+					_y = tempY;
+					_hits++;
+					_playerShipsLeft--;
+					if (_hits == 4)
+						_hits = 0;
+				}
+				
 			}
 		}
 	}
@@ -414,7 +489,7 @@ public:
 	Game()
 	{
 		_playerWin = false;
-		_again = false;
+		_again = true;
 	}
 	void play(int size = 10)
 	{
@@ -443,9 +518,6 @@ public:
 			case true:
 				cout << "Congratulations! You won!\n";
 				break;
-			default:
-				cout << "Something went wrong!\n";
-				break;
 			}
 			cout << "Press 0 to end game or 1 to continue:"; cin >> _again;
 		}
@@ -456,7 +528,9 @@ public:
 
 int main()
 {
+	
 	Game game;
 	game.play();
+
 }
 
