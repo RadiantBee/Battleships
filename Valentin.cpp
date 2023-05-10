@@ -305,7 +305,7 @@ public:
 	}
 	void hit(int x, int y)
 	{
-		if (_matrix[x][y] == 1)
+		if (_matrix[x][y] == 1 || _matrix[x][y] == 2)
 		{
 			_matrix[x][y] = 2;
 		}
@@ -356,7 +356,7 @@ public:
 	{
 		return _enemyShipsLeft;
 	}
-	void playerTurn()
+	void playerTurn(int size)
 	{
 		int x; int y;
 		bool repeat = true;
@@ -369,9 +369,21 @@ public:
 			_shipField.print();
 			cout << "Your hits: ";
 			_hitField.printHit();
-
 			cout << "Hit x: "; cin >> x;
 			cout << "Hit y: "; cin >> y;
+
+			while (x < 0 || x >= size || y < 0 || y >= size)
+			{
+				system("cls");
+				cout << "Wrong coordinates!\n";
+				cout << "Your ships: ";
+				_shipField.print();
+				cout << "Your hits: ";
+				_hitField.printHit();
+				cout << "Hit x: "; cin >> x;
+				cout << "Hit y: "; cin >> y;
+			}
+			
 			_hitField.hit(x, y);
 			if (_hitField(x,y) == 2)
 			{
@@ -381,10 +393,13 @@ public:
 		}
 
 	}
-	void aiTurn(int size)
+	void aiTurn(int size) // there are bugs
 	{
-		_x = rand() % size;
-		_y = rand() % size;
+		if (!_hits)
+		{
+			_x = rand() % size;
+			_y = rand() % size;
+		}
 		while (true)
 		{
 			if(!_hits)
@@ -412,18 +427,19 @@ public:
 			if (_hits)
 			{
 				int tempX, tempY;
-				while (_x + _direction - 2 == size || _y + _direction - 1 == size) // if direction lead in a bad spot
+				while (_x + _direction - 2 == size || _y + _direction - 1 == size) // if direction leads in a bad spot
 				{
 					_direction++; // change direction
 				}
-				// there are 4 directions: ↑ = 0; → = 1; ↓ = 2; ← = 3
+				// there are 4 directions: ↑ = 0; ← = 1; ↓ = 2; → = 3
+				/*
 				if (_direction > 3)
 				{
 					_hits = 0;
 					_direction = 0;
 					continue;
 				}
-
+				*/
 				
 				if (_direction % 2)
 				{
@@ -474,7 +490,6 @@ public:
 					if (_hits == 4)
 						_hits = 0;
 				}
-				
 			}
 		}
 	}
@@ -499,7 +514,7 @@ public:
 			Player player(size);
 			while (true)
 			{
-				player.playerTurn();
+				player.playerTurn(size);
 				if (!player.enemyShipsLeft())
 				{
 					_playerWin = true;
@@ -520,10 +535,8 @@ public:
 				break;
 			}
 			cout << "Press 0 to end game or 1 to continue:"; cin >> _again;
-		}
-		
+		}	
 	}
-
 };
 
 int main()
